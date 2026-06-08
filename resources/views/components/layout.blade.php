@@ -87,6 +87,12 @@
                         <i class="bi bi-megaphone"></i> Announcements
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
+                       href="{{ route('profile.edit') }}">
+                        <i class="bi bi-person-gear"></i> My Profile
+                    </a>
+                </li>
             @endif
 
             @if(auth()->user()->isAdmin())
@@ -189,11 +195,19 @@
                 @endif
                 {{-- User avatar + name + role --}}
                 <div class="d-flex align-items-center gap-2">
-                    <div style="width:34px;height:34px;border-radius:50%;
+                    <a href="{{ route('profile.edit') }}" style="text-decoration:none;">
+                    @php $profilePhoto = auth()->user()->resident?->photo_path; @endphp
+                    <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;
                                 background:linear-gradient(135deg,#667eea,#764ba2);
                                 display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="bi bi-person-fill" style="color:#fff;font-size:15px;"></i>
+                        @if($profilePhoto)
+                            <img src="{{ $profilePhoto }}" alt="Profile"
+                                 style="width:100%;height:100%;object-fit:cover;">
+                        @else
+                            <i class="bi bi-person-fill" style="color:#fff;font-size:15px;"></i>
+                        @endif
                     </div>
+                    </a>
                     <div style="line-height:1.2;">
                         <div style="font-size:13px;font-weight:700;color:#0f172a;">{{ auth()->user()->name }}</div>
                         <div style="font-size:11px;color:#64748b;">{{ ucfirst(auth()->user()->role) }}</div>

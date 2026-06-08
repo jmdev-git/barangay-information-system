@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,9 +12,6 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
     public function edit(Request $request): View
     {
         return view('profile.edit', [
@@ -21,9 +19,6 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
@@ -38,8 +33,28 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Upload profile picture — stored in Cloudinary, URL saved on resident profile.
      */
+    public function uploadPhoto(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $resident = $request->user()->resident;
+
+        if (! $resident) {
+            return back()->with('error', 'Resident profile not found.');
+        }
+
+        $cloudinary = app(CloudinaryService::class);
+        $uploaded   = $cloudinary->upload($request->file('photo'), 'profile-photos');
+
+        $resident->update(['photo_path' => $uploaded['secure_url']]);
+
+        return back()->with('status', 'photo-updated');
+    }
+
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
@@ -47,11 +62,8 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-
         Auth::logout();
-
         $user->delete();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
