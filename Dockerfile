@@ -1,46 +1,44 @@
-FROM php:8.4-apache
+FROM php:8.4-cli
 
-WORKDIR /var/www/html
-
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
-    unzip \
-    zip \
     curl \
-    libzip-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    sqlite3 \
     libsqlite3-dev \
-    nodejs \
-    npm \
-    && docker-php-ext-install pdo pdo_mysql pdo_sqlite mbstring zip exif pcntl bcmath gd
+    && docker-php-ext-install pdo pdo_sqlite mbstring exif pcntl bcmath gd zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set working directory
+WORKDIR /var/www
+
+# Copy project files
 COPY . .
 
-RUN mkdir -p bootstrap/cache \
-    storage/framework/cache \
-    storage/framework/sessions \
-    storage/framework/views \
-    storage/logs
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-RUN chmod -R 775 bootstrap/cache storage
-RUN chown -R www-data:www-data /var/www/html
+# Set permissions
+RUN chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
-RUN composer install --no-dev --optimize-autoloader
+# Create the persistent data directory for SQLite
+RUN mkdir -p /var/data
 
-RUN npm install && npm run build
+# Expose port
+EXPOSE 10000
 
-RUN php artisan config:clear
-RUN php artisan route:clear
-RUN php artisan view:clear
+# Start script
+COPY docker-start.sh /docker-start.sh
+RUN chmod +x /docker-start.sh
 
-COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
-
-RUN a2enmod rewrite
-
-EXPOSE 80
-
-CMD sh -c "touch /tmp/database.sqlite && chmod 666 /tmp/database.sqlite && php artisan migrate --force && php artisan db:seed --force && apache2-foreground"
+CMD ["/docker-start.sh"]
