@@ -19,21 +19,20 @@ if [ ! -f "$DB_DATABASE" ]; then
     echo "SQLite file created."
 fi
 
-# Clear any cached config so env vars take effect
+# Clear only file-based config cache (no DB needed)
 php artisan config:clear
-php artisan cache:clear
 
-# Run migrations
+# Run migrations FIRST before anything that touches the DB
 echo "Running migrations..."
 php artisan migrate --force
 
 # Storage symlink
 php artisan storage:link || true
 
-# Set storage permissions
+# Set permissions
 chmod -R 775 /var/www/storage /var/www/bootstrap/cache || true
 
-# Cache for performance (after env is set)
+# Now safe to cache everything
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
