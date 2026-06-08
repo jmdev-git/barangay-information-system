@@ -16,6 +16,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Force HTTPS when running behind Render's proxy (production)
+        if (config('app.env') === 'production') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+            $this->app['request']->server->set('HTTPS', 'on');
+        }
         /**
          * API Rate Limits (Req 9 AC6):
          *  - Authenticated users: 60 req/min per user ID
