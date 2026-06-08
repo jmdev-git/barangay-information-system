@@ -1,0 +1,24 @@
+[variables]
+NIXPACKS_PHP_ROOT_DIR = "/app/public"
+NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
+NODE_ENV = "production"
+
+[phases.setup]
+nixPkgs = ["...", "php84", "php84Packages.composer", "nodejs_20", "npm"]
+
+[phases.install]
+cmds = [
+    "composer install --optimize-autoloader --no-dev --no-interaction",
+    "npm ci"
+]
+
+[phases.build]
+cmds = [
+    "npm run build",
+    "php artisan config:clear",
+    "php artisan route:clear",
+    "php artisan view:clear"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=${PORT}"
