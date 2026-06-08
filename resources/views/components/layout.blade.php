@@ -205,6 +205,36 @@
 
         {{-- Main content --}}
         <div class="main-content">
+            {{-- In-app notifications for residents (clearance/blotter status updates) --}}
+            @auth
+            @if(auth()->user()->isResident())
+                @php
+                    $unread = [];
+                    try {
+                        $unread = auth()->user()->unreadNotifications()->latest()->take(5)->get();
+                    } catch (\Throwable $e) {}
+                @endphp
+                @foreach($unread as $notif)
+                    @php $data = $notif->data; @endphp
+                    <div class="alert alert-{{ $data['color'] ?? 'info' }} alert-dismissible fade show d-flex align-items-center gap-2"
+                         role="alert" style="border-radius:.6rem;">
+                        <i class="bi {{ $data['icon'] ?? 'bi-bell-fill' }}" style="font-size:1.1rem;flex-shrink:0;"></i>
+                        <div class="flex-grow-1">
+                            {{ $data['message'] ?? '' }}
+                            @if(!empty($data['url']))
+                                <a href="{{ $data['url'] }}" class="alert-link ms-2" style="font-size:13px;">View →</a>
+                            @endif
+                        </div>
+                        <form method="POST" action="{{ route('notifications.markRead', $notif->id) }}" class="mb-0">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn-close" aria-label="Dismiss"></button>
+                        </form>
+                    </div>
+                @endforeach
+            @endif
+            @endauth
+
             @if($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <strong>Please fix the following errors:</strong>

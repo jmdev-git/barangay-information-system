@@ -49,6 +49,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Notification mark-as-read
+    Route::patch('/notifications/{id}/read', function (string $id) {
+        auth()->user()->notifications()->where('id', $id)->update(['read_at' => now()]);
+        return back();
+    })->name('notifications.markRead');
+
     // Account status information pages (Req 3 AC5, AC6)
     Route::get('/account/pending', [AccountStatusController::class, 'pending'])->name('account.pending');
     Route::get('/account/rejected', [AccountStatusController::class, 'rejected'])->name('account.rejected');

@@ -23,7 +23,28 @@ class ClearanceStatusNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        if ($this->action === 'approved') {
+            return [
+                'type'    => 'clearance_approved',
+                'message' => 'Your barangay clearance request has been approved. You can now download your certificate.',
+                'url'     => url('/clearances/' . $this->clearance->id),
+                'color'   => 'success',
+                'icon'    => 'bi-check-circle-fill',
+            ];
+        }
+
+        return [
+            'type'    => 'clearance_rejected',
+            'message' => 'Your barangay clearance request was not approved. Reason: ' . ($this->reason ?? 'No reason provided.'),
+            'url'     => url('/clearances/' . $this->clearance->id),
+            'color'   => 'danger',
+            'icon'    => 'bi-x-circle-fill',
+        ];
     }
 
     public function toMail($notifiable): MailMessage

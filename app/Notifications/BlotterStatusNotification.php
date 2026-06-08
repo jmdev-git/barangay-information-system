@@ -22,7 +22,30 @@ class BlotterStatusNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $caseNumber = $this->blotter->case_number;
+
+        if ($this->action === 'approved') {
+            return [
+                'type'    => 'blotter_approved',
+                'message' => "Your blotter report ({$caseNumber}) has been approved and is now open.",
+                'url'     => url('/my-blotters/' . $this->blotter->id),
+                'color'   => 'success',
+                'icon'    => 'bi-check-circle-fill',
+            ];
+        }
+
+        return [
+            'type'    => 'blotter_rejected',
+            'message' => "Your blotter report ({$caseNumber}) was not approved. Reason: " . ($this->reason ?? 'No reason provided.'),
+            'url'     => url('/my-blotters/' . $this->blotter->id),
+            'color'   => 'danger',
+            'icon'    => 'bi-x-circle-fill',
+        ];
     }
 
     public function toMail($notifiable): MailMessage
