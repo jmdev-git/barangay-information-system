@@ -58,6 +58,7 @@
 
                     {{-- View Report form --}}
                     <form method="GET" action="{{ route('reports.residents') }}" class="mb-3" id="resForm">
+                        <input type="hidden" name="format" id="r_format" value="">
                         <div class="mb-2">
                             <input type="date" name="date_from" id="r_df" class="form-control form-control-sm">
                         </div>
@@ -75,20 +76,23 @@
                                 <option value="female">Female</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">
+                        <button type="submit" onclick="document.getElementById('r_format').value=''" class="btn btn-primary btn-sm w-100 mb-2">
                             <i class="bi bi-eye"></i> View Report
                         </button>
                     </form>
 
-                    {{-- Export buttons --}}
+                    {{-- Export buttons — submit same form but to export route --}}
                     <div class="d-flex gap-1">
-                        <button onclick="doExport('residents','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
+                        <button type="button" onclick="submitExport('resForm','residents','pdf')"
+                                class="btn btn-outline-danger btn-sm flex-fill">
                             <i class="bi bi-file-pdf"></i> PDF
                         </button>
-                        <button onclick="doExport('residents','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
+                        <button type="button" onclick="submitExport('resForm','residents','xlsx')"
+                                class="btn btn-outline-success btn-sm flex-fill">
                             <i class="bi bi-file-excel"></i> XLSX
                         </button>
-                        <button onclick="doExport('residents','csv')" class="btn btn-outline-primary btn-sm flex-fill">
+                        <button type="button" onclick="submitExport('resForm','residents','csv')"
+                                class="btn btn-outline-primary btn-sm flex-fill">
                             <i class="bi bi-filetype-csv"></i> CSV
                         </button>
                     </div>
@@ -144,13 +148,13 @@
                     </form>
 
                     <div class="d-flex gap-1">
-                        <button onclick="doExport('blotters','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
+                        <button onclick="submitExport('bltForm','blotters','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
                             <i class="bi bi-file-pdf"></i> PDF
                         </button>
-                        <button onclick="doExport('blotters','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
+                        <button onclick="submitExport('bltForm','blotters','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
                             <i class="bi bi-file-excel"></i> XLSX
                         </button>
-                        <button onclick="doExport('blotters','csv')" class="btn btn-outline-primary btn-sm flex-fill">
+                        <button onclick="submitExport('bltForm','blotters','csv')" class="btn btn-outline-primary btn-sm flex-fill">
                             <i class="bi bi-filetype-csv"></i> CSV
                         </button>
                     </div>
@@ -204,13 +208,13 @@
                     </form>
 
                     <div class="d-flex gap-1">
-                        <button onclick="doExport('clearances','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
+                        <button onclick="submitExport('clrForm','clearances','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
                             <i class="bi bi-file-pdf"></i> PDF
                         </button>
-                        <button onclick="doExport('clearances','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
+                        <button onclick="submitExport('clrForm','clearances','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
                             <i class="bi bi-file-excel"></i> XLSX
                         </button>
-                        <button onclick="doExport('clearances','csv')" class="btn btn-outline-primary btn-sm flex-fill">
+                        <button onclick="submitExport('clrForm','clearances','csv')" class="btn btn-outline-primary btn-sm flex-fill">
                             <i class="bi bi-filetype-csv"></i> CSV
                         </button>
                     </div>
@@ -221,42 +225,18 @@
     </div>
 </x-layout>
 
-@push('scripts')
 <script>
-function doExport(type, format) {
-    const base = '{{ route("reports.export") }}';
-    const p    = new URLSearchParams({ type, format });
+function submitExport(formId, type, format) {
+    const form   = document.getElementById(formId);
+    const inputs = form.querySelectorAll('input, select');
+    const params = new URLSearchParams({ type, format });
 
-    if (type === 'residents') {
-        const df = document.getElementById('r_df').value;
-        const dt = document.getElementById('r_dt').value;
-        const pu = document.getElementById('r_pu').value;
-        const ge = document.getElementById('r_ge').value;
-        if (df) p.set('date_from', df);
-        if (dt) p.set('date_to',   dt);
-        if (pu) p.set('purok',     pu);
-        if (ge) p.set('gender',    ge);
-    } else if (type === 'blotters') {
-        const df = document.getElementById('b_df').value;
-        const dt = document.getElementById('b_dt').value;
-        const hh = document.getElementById('b_hh').value;
-        const st = document.getElementById('b_st').value;
-        if (df) p.set('date_from',    df);
-        if (dt) p.set('date_to',      dt);
-        if (hh) p.set('household_id', hh);
-        if (st) p.set('status',       st);
-    } else if (type === 'clearances') {
-        const df = document.getElementById('c_df').value;
-        const dt = document.getElementById('c_dt').value;
-        const hh = document.getElementById('c_hh').value;
-        const st = document.getElementById('c_st').value;
-        if (df) p.set('date_from',    df);
-        if (dt) p.set('date_to',      dt);
-        if (hh) p.set('household_id', hh);
-        if (st) p.set('status',       st);
-    }
+    inputs.forEach(el => {
+        if (el.name && el.name !== 'format' && el.value) {
+            params.set(el.name, el.value);
+        }
+    });
 
-    window.location.href = base + '?' + p.toString();
+    window.location.href = '{{ route("reports.export") }}?' + params.toString();
 }
 </script>
-@endpush
