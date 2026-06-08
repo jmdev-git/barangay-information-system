@@ -7,11 +7,11 @@
             <small class="text-muted">{{ $filters }}</small>
         </div>
         <div class="d-flex gap-1">
-            <a href="{{ route('reports.export', array_merge(['type'=>$type,'format'=>'pdf'], request()->only(['date_from','date_to','purok']))) }}"
+            <a href="{{ route('reports.export', array_merge(['type'=>$type,'format'=>'pdf'], request()->only(['date_from','date_to','purok','gender','search']))) }}"
                class="btn btn-outline-danger btn-sm"><i class="bi bi-file-pdf"></i> PDF</a>
-            <a href="{{ route('reports.export', array_merge(['type'=>$type,'format'=>'xlsx'], request()->only(['date_from','date_to','purok']))) }}"
+            <a href="{{ route('reports.export', array_merge(['type'=>$type,'format'=>'xlsx'], request()->only(['date_from','date_to','purok','gender','search']))) }}"
                class="btn btn-outline-success btn-sm"><i class="bi bi-file-excel"></i> XLSX</a>
-            <a href="{{ route('reports.export', array_merge(['type'=>$type,'format'=>'csv'], request()->only(['date_from','date_to','purok']))) }}"
+            <a href="{{ route('reports.export', array_merge(['type'=>$type,'format'=>'csv'], request()->only(['date_from','date_to','purok','gender','search']))) }}"
                class="btn btn-outline-primary btn-sm"><i class="bi bi-filetype-csv"></i> CSV</a>
             <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Back
@@ -22,20 +22,33 @@
     {{-- Filter bar --}}
     <x-card>
         <form method="GET" action="{{ route('reports.residents') }}" class="row g-2 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-semibold mb-1" style="font-size:12px;">Date From</label>
                 <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-semibold mb-1" style="font-size:12px;">Date To</label>
                 <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-semibold mb-1" style="font-size:12px;">Purok</label>
                 <input type="text" name="purok" value="{{ $purok }}" class="form-control form-control-sm"
                        placeholder="e.g. Purok 1">
             </div>
-            <div class="col-md-3 d-flex gap-2">
+            <div class="col-md-2">
+                <label class="form-label fw-semibold mb-1" style="font-size:12px;">Gender</label>
+                <select name="gender" class="form-select form-select-sm">
+                    <option value="">All Genders</option>
+                    <option value="male"   @selected(($gender??'')==='male')>Male</option>
+                    <option value="female" @selected(($gender??'')==='female')>Female</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold mb-1" style="font-size:12px;">Search</label>
+                <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control form-control-sm"
+                       placeholder="Name or contact...">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-sm flex-fill">
                     <i class="bi bi-funnel"></i> Filter
                 </button>

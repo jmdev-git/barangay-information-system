@@ -38,6 +38,8 @@ class ReportController extends Controller
         $dateFrom = $request->query('date_from');
         $dateTo   = $request->query('date_to');
         $purok    = $request->query('purok');
+        $gender   = $request->query('gender');
+        $search   = $request->query('search');
 
         $residents = Resident::with(['household', 'user'])
             ->when($dateFrom, fn ($q) => $q->where('created_at', '>=', $dateFrom))
@@ -45,16 +47,26 @@ class ReportController extends Controller
             ->when($purok,    fn ($q) => $q->whereHas('household', fn ($hq) =>
                 $hq->where('purok', 'like', "%{$purok}%")
             ))
+            ->when($gender,   fn ($q) => $q->where('gender', $gender))
+            ->when($search,   fn ($q) => $q->where(fn ($q) =>
+                $q->where('first_name',     'like', "%{$search}%")
+                  ->orWhere('last_name',     'like', "%{$search}%")
+                  ->orWhere('contact_number','like', "%{$search}%")
+            ))
             ->latest()
             ->get();
 
         $filters = $this->buildFilters([
-            'Date From'  => $dateFrom,
-            'Date To'    => $dateTo,
-            'Purok'      => $purok,
+            'Date From' => $dateFrom,
+            'Date To'   => $dateTo,
+            'Purok'     => $purok,
+            'Gender'    => $gender ? ucfirst($gender) : null,
+            'Search'    => $search,
         ]);
 
-        return view('admin.reports.residents', compact('residents', 'filters', 'dateFrom', 'dateTo', 'purok'));
+        return view('admin.reports.residents', compact(
+            'residents', 'filters', 'dateFrom', 'dateTo', 'purok', 'gender', 'search'
+        ));
     }
 
     // -------------------------------------------------------------------------
@@ -153,8 +165,10 @@ class ReportController extends Controller
         $purok    = $request->query('purok');
         $hhId     = $request->query('household_id');
         $status   = $request->query('status');
+        $gender   = $request->query('gender');
+        $search   = $request->query('search');
 
-        [$rows, $headings, $keys, $title] = $this->reportPayload($type, $dateFrom, $dateTo, $purok, $hhId, $status);
+        [$rows, $headings, $keys, $title] = $this->reportPayload($type, $dateFrom, $dateTo, $purok, $hhId, $status, $gender, $search);
 
         // Req 12 AC3 — zero-record export still produces a file
         if ($rows->isEmpty()) {
@@ -164,6 +178,8 @@ class ReportController extends Controller
         $filters     = $this->buildFilters(array_filter([
             'Date From' => $dateFrom, 'Date To' => $dateTo,
             'Purok'     => $purok,    'Status'  => $status,
+            'Gender'    => $gender ? ucfirst($gender) : null,
+            'Search'    => $search,
             'Household' => $hhId ? Household::find($hhId)?->address : null,
         ]));
         $generatedAt = now();
@@ -224,7 +240,9 @@ class ReportController extends Controller
         ?string $dateTo,
         ?string $purok,
         ?string $hhId,
-        ?string $status
+        ?string $status,
+        ?string $gender = null,
+        ?string $search = null
     ): array {
         return match ($type) {
             'blotters' => [
@@ -240,7 +258,7 @@ class ReportController extends Controller
                 'Clearance Issuance Report',
             ],
             default => [
-                $this->getResidentData($dateFrom, $dateTo, $purok),
+                $this->getResidentData($dateFrom, $dateTo, $purok, $gender, $search),
                 ['ID', 'Full Name', 'Age', 'Gender', 'Civil Status', 'Contact', 'Address', 'Purok', 'Barangay', 'Account Status'],
                 ['id', 'full_name', 'age', 'gender', 'civil_status', 'contact', 'address', 'purok', 'barangay', 'account_status'],
                 'Resident Census Report',
@@ -248,13 +266,19 @@ class ReportController extends Controller
         };
     }
 
-    private function getResidentData(?string $from, ?string $to, ?string $purok): Collection
+    private function getResidentData(?string $from, ?string $to, ?string $purok, ?string $gender = null, ?string $search = null): Collection
     {
         return Resident::with(['household', 'user'])
-            ->when($from,  fn ($q) => $q->where('created_at', '>=', $from))
-            ->when($to,    fn ($q) => $q->where('created_at', '<=', $to . ' 23:59:59'))
-            ->when($purok, fn ($q) => $q->whereHas('household', fn ($hq) =>
+            ->when($from,   fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to,     fn ($q) => $q->where('created_at', '<=', $to . ' 23:59:59'))
+            ->when($purok,  fn ($q) => $q->whereHas('household', fn ($hq) =>
                 $hq->where('purok', 'like', "%{$purok}%")
+            ))
+            ->when($gender, fn ($q) => $q->where('gender', $gender))
+            ->when($search, fn ($q) => $q->where(fn ($q) =>
+                $q->where('first_name',     'like', "%{$search}%")
+                  ->orWhere('last_name',     'like', "%{$search}%")
+                  ->orWhere('contact_number','like', "%{$search}%")
             ))
             ->latest()
             ->get()
