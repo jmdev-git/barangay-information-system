@@ -1,22 +1,29 @@
 #!/bin/bash
 set -e
 
-# Create SQLite database file if it doesn't exist
-if [ ! -f /var/data/database.sqlite ]; then
-    touch /var/data/database.sqlite
-    echo "SQLite database created at /var/data/database.sqlite"
+# Use /var/data if it exists (persistent disk), otherwise fall back to local storage
+if [ -d "/var/data" ]; then
+    DB_PATH="/var/data/database.sqlite"
+else
+    DB_PATH="/var/www/database/database.sqlite"
 fi
 
-# Point DB to persistent disk
-export DB_DATABASE=/var/data/database.sqlite
+# Create SQLite database file if it doesn't exist
+if [ ! -f "$DB_PATH" ]; then
+    touch "$DB_PATH"
+    echo "SQLite database created at $DB_PATH"
+fi
+
+# Set the DB path
+export DB_DATABASE="$DB_PATH"
 
 # Run migrations
 php artisan migrate --force
 
-# Create storage symlink
+# Create storage symlink (ignore if already exists)
 php artisan storage:link || true
 
-# Cache config, routes, views for performance
+# Cache for performance
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
