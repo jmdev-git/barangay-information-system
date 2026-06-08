@@ -1,6 +1,6 @@
 FROM php:8.4-cli
 
-# Install system dependencies
+# Install system dependencies + PostgreSQL
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -8,11 +8,10 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    libpq-dev \
     zip \
     unzip \
-    sqlite3 \
-    libsqlite3-dev \
-    && docker-php-ext-install pdo pdo_sqlite mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
@@ -37,9 +36,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
-
-# Create the persistent data directory for SQLite
-RUN mkdir -p /var/data
 
 # Expose port
 EXPOSE 10000
