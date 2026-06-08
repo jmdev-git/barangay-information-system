@@ -145,6 +145,25 @@
 
         <x-auth-session-status class="mb-4" :status="session('status')" />
 
+        {{-- Pending / Rejected account warning --}}
+        @if($errors->has('email') && str_contains($errors->first('email'), 'pending verification'))
+            <div style="background:#fffbeb;border:1px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start;">
+                <i class="bi bi-hourglass-split" style="color:#f59e0b;font-size:1.2rem;flex-shrink:0;margin-top:2px;"></i>
+                <div>
+                    <div style="font-weight:700;color:#92400e;font-size:14px;margin-bottom:3px;">Account Pending Verification</div>
+                    <div style="color:#78350f;font-size:13px;">{{ $errors->first('email') }}</div>
+                </div>
+            </div>
+        @elseif($errors->has('email') && str_contains($errors->first('email'), 'not approved'))
+            <div style="background:#fef2f2;border:1px solid #f87171;border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start;">
+                <i class="bi bi-x-circle-fill" style="color:#ef4444;font-size:1.2rem;flex-shrink:0;margin-top:2px;"></i>
+                <div>
+                    <div style="font-weight:700;color:#991b1b;font-size:14px;margin-bottom:3px;">Account Not Approved</div>
+                    <div style="color:#7f1d1d;font-size:13px;">{{ $errors->first('email') }}</div>
+                </div>
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('login') }}">
             @csrf
 

@@ -31,6 +31,30 @@ class AuthenticatedSessionController
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+
+        // Block pending residents from accessing the system
+        if ($user->isResident() && $user->isPendingVerification()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Your account is still pending verification by a barangay admin. You will be notified by email once approved.',
+            ])->onlyInput('email');
+        }
+
+        // Block rejected residents
+        if ($user->isResident() && $user->isRejected()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Your account registration was not approved. Reason: ' . ($user->rejection_reason ?? 'Please contact the barangay office for more information.'),
+            ])->onlyInput('email');
+        }
+
         return redirect()->intended('/dashboard');
     }
 
