@@ -16,11 +16,7 @@ return new class extends Migration
             $table->string('barangay');
             $table->string('purok')->nullable();
             $table->timestamps();
-
-            $table->foreign('household_head_id')
-                ->references('id')
-                ->on('residents')
-                ->nullOnDelete();
+            // Note: foreign key to residents added after residents table is created
         });
     }
 
