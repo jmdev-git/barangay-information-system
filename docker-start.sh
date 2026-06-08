@@ -1,33 +1,42 @@
 #!/bin/bash
 set -e
 
+echo "=== Barangay IS startup ==="
+
 # Use /var/data if it exists (persistent disk), otherwise fall back to local storage
 if [ -d "/var/data" ]; then
-    DB_PATH="/var/data/database.sqlite"
+    export DB_DATABASE="/var/data/database.sqlite"
 else
-    DB_PATH="/var/www/database/database.sqlite"
+    export DB_DATABASE="/var/www/database/database.sqlite"
 fi
 
-# Create SQLite database file if it doesn't exist
-if [ ! -f "$DB_PATH" ]; then
-    touch "$DB_PATH"
-    echo "SQLite database created at $DB_PATH"
+echo "Using database: $DB_DATABASE"
+
+# Create SQLite file if it doesn't exist
+if [ ! -f "$DB_DATABASE" ]; then
+    touch "$DB_DATABASE"
+    chmod 664 "$DB_DATABASE"
+    echo "SQLite file created."
 fi
 
-# Set the DB path
-export DB_DATABASE="$DB_PATH"
+# Clear any cached config so env vars take effect
+php artisan config:clear
+php artisan cache:clear
 
 # Run migrations
+echo "Running migrations..."
 php artisan migrate --force
 
-# Create storage symlink (ignore if already exists)
+# Storage symlink
 php artisan storage:link || true
 
-# Cache for performance
+# Set storage permissions
+chmod -R 775 /var/www/storage /var/www/bootstrap/cache || true
+
+# Cache for performance (after env is set)
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Start Laravel
-echo "Starting Laravel on port 10000..."
+echo "=== Starting Laravel on port 10000 ==="
 php artisan serve --host=0.0.0.0 --port=10000
