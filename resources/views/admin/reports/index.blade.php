@@ -18,7 +18,7 @@
                         </div>
                         <div>
                             <h5 class="fw-bold mb-0">Resident Census</h5>
-                            <small class="text-muted">Filter by date range & purok</small>
+                            <small class="text-muted">Filter by date range, purok & gender</small>
                         </div>
                     </div>
                     <form method="GET" action="{{ route('reports.residents') }}" class="mb-3" id="residentFilterForm">
@@ -34,16 +34,12 @@
                             <input type="text" name="purok" id="res_purok" class="form-control form-control-sm"
                                    placeholder="Filter by Purok (e.g. Purok 1)">
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <select name="gender" id="res_gender" class="form-select form-select-sm">
                                 <option value="">All Genders</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                             </select>
-                        </div>
-                        <div class="mb-3">
-                            <input type="text" name="search" id="res_search" class="form-control form-control-sm"
-                                   placeholder="Search name, contact...">
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">
                             <i class="bi bi-eye"></i> View Report
