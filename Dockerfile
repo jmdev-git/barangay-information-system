@@ -37,6 +37,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
+# Clear any cached config so runtime env vars take effect
+RUN php artisan config:clear || true
+RUN php artisan cache:clear || true
+RUN rm -f bootstrap/cache/config.php bootstrap/cache/routes*.php bootstrap/cache/services.php
+
 # Expose port
 EXPOSE 10000
 
