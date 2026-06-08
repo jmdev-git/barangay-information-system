@@ -223,10 +223,10 @@ class ReportController extends Controller
                 'data'           => $rows,
             ])->header('Content-Disposition', "attachment; filename={$filename}.json"),
 
-            'csv'  => $this->downloadCsv($rows, $headings, $keys, "{$filename}.csv"),
+            'csv'  => $this->downloadCsv($rows, $headings, $keys, "{$filename}.csv", $title, $filters, $generatedAt->format('F d, Y h:i A')),
 
             'xlsx' => Excel::download(
-                new GenericReportExport($rows, $headings, $keys),
+                new GenericReportExport($rows, $headings, $keys, $title, $filters, $generatedAt->format('F d, Y h:i A')),
                 "{$filename}.xlsx"
             ),
 
@@ -371,11 +371,20 @@ class ReportController extends Controller
             ]);
     }
 
-    private function downloadCsv(Collection $rows, array $headings, array $keys, string $filename): StreamedResponse
+    private function downloadCsv(Collection $rows, array $headings, array $keys, string $filename, string $title = 'Report', string $filters = 'No filters applied', string $generatedAt = ''): StreamedResponse
     {
-        return response()->streamDownload(function () use ($rows, $headings, $keys) {
+        return response()->streamDownload(function () use ($rows, $headings, $keys, $title, $filters, $generatedAt) {
             $handle = fopen('php://output', 'w');
+            // Meta header rows
+            fputcsv($handle, ['BARANGAY MANAGEMENT INFORMATION SYSTEM']);
+            fputcsv($handle, [$title]);
+            fputcsv($handle, ['Generated: ' . ($generatedAt ?: now()->format('F d, Y h:i A'))]);
+            fputcsv($handle, ['Filters: ' . $filters]);
+            fputcsv($handle, ['Total Records: ' . $rows->count()]);
+            fputcsv($handle, []);
+            // Column headings
             fputcsv($handle, $headings);
+            // Data rows
             foreach ($rows as $row) {
                 fputcsv($handle, collect($keys)->map(fn ($k) => data_get($row, $k, ''))->toArray());
             }

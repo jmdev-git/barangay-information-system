@@ -59,6 +59,27 @@
         </form>
     </x-card>
 
+    {{-- Active filter banner --}}
+    @if($dateFrom || $dateTo || $householdId || $status)
+    <div class="alert d-flex align-items-center gap-2 mb-3 py-2"
+         style="background:#f0fff4;border:1px solid #9ae6b4;border-radius:.6rem;">
+        <i class="bi bi-funnel-fill text-success"></i>
+        <div style="font-size:13px;">
+            <strong>Active Filters:</strong>
+            @if($dateFrom || $dateTo)
+                <span class="badge bg-success ms-1">
+                    📅 {{ $dateFrom ? \Carbon\Carbon::parse($dateFrom)->format('M d, Y') : 'Start' }}
+                    → {{ $dateTo ? \Carbon\Carbon::parse($dateTo)->format('M d, Y') : 'Now' }}
+                </span>
+            @endif
+            @if($status)
+                <span class="badge bg-secondary ms-1">{{ ucfirst($status) }}</span>
+            @endif
+            <span class="text-muted ms-2" style="font-size:12px;">— {{ $clearances->count() }} record(s) shown</span>
+        </div>
+    </div>
+    @endif
+
     {{-- Stats + header (Req 12 AC4) --}}
     <div class="card mb-3" style="background:#f0fff4;border:1px solid #9ae6b4;">
         <div class="card-body py-3">

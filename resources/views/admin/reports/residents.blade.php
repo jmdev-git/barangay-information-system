@@ -57,6 +57,33 @@
         </form>
     </x-card>
 
+    {{-- Active filter banner — shows date range prominently (Req 12) --}}
+    @if($dateFrom || $dateTo || $purok || ($gender ?? '') || ($search ?? ''))
+    <div class="alert d-flex align-items-center gap-2 mb-3 py-2"
+         style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:.6rem;">
+        <i class="bi bi-funnel-fill text-primary"></i>
+        <div style="font-size:13px;">
+            <strong>Active Filters:</strong>
+            @if($dateFrom || $dateTo)
+                <span class="badge bg-primary ms-1">
+                    📅 {{ $dateFrom ? \Carbon\Carbon::parse($dateFrom)->format('M d, Y') : 'Start' }}
+                    → {{ $dateTo ? \Carbon\Carbon::parse($dateTo)->format('M d, Y') : 'Now' }}
+                </span>
+            @endif
+            @if($purok)
+                <span class="badge bg-secondary ms-1">📍 Purok: {{ $purok }}</span>
+            @endif
+            @if($gender ?? '')
+                <span class="badge bg-info ms-1">⚥ {{ ucfirst($gender) }}</span>
+            @endif
+            @if($search ?? '')
+                <span class="badge bg-warning text-dark ms-1">🔍 "{{ $search }}"</span>
+            @endif
+            <span class="text-muted ms-2" style="font-size:12px;">— {{ $residents->count() }} record(s) shown</span>
+        </div>
+    </div>
+    @endif
+
     {{-- Report header (Req 12 AC4) --}}
     <div class="card mb-3" style="background:#f0f6ff;border:1px solid #c7d7f5;">
         <div class="card-body py-3">
