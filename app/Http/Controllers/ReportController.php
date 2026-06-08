@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Exports\GenericReportExport;
+use App\Imports\ResidentsImport;
 use App\Models\Blotter;
 use App\Models\Clearance;
 use App\Models\Household;
 use App\Models\Resident;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -28,6 +30,31 @@ class ReportController extends Controller
     {
         $households = Household::orderBy('address')->get(['id', 'address', 'purok']);
         return view('admin.reports.index', compact('households'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Import residents from Excel (Req 12)
+    // -------------------------------------------------------------------------
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:xlsx,xls|max:10240',
+        ], [
+            'import_file.required' => 'Please select an Excel file to import.',
+            'import_file.mimes'    => 'Only .xlsx and .xls files are accepted.',
+            'import_file.max'      => 'File must not exceed 10 MB.',
+        ]);
+
+        try {
+            $import = new ResidentsImport();
+            Excel::import($import, $request->file('import_file'));
+
+            return redirect()->route('reports.index')
+                ->with('success', "Import complete. {$import->importedCount} resident(s) imported successfully.");
+        } catch (\Throwable $e) {
+            return redirect()->route('reports.index')
+                ->with('error', 'Import failed: ' . $e->getMessage());
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -158,6 +185,7 @@ class ReportController extends Controller
     // -------------------------------------------------------------------------
     public function export(Request $request)
     {
+        try {
         $format   = strtolower($request->query('format', 'pdf'));
         $type     = strtolower($request->query('type', 'residents'));
         $dateFrom = $request->query('date_from');
@@ -214,6 +242,10 @@ class ReportController extends Controller
 
             default => back()->with('error', 'Invalid format. Use: pdf, xlsx, csv, json.'),
         };
+        } catch (\Throwable $e) {
+            return redirect()->route('reports.index')
+                ->with('error', 'Export failed: ' . $e->getMessage());
+        }
     }
 
     // -------------------------------------------------------------------------

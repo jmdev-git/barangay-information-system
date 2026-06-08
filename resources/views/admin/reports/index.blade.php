@@ -6,8 +6,42 @@
         </div>
     </div>
 
+    {{-- Import Section --}}
+    <div class="card mb-4" style="border-top:4px solid #667eea;">
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);
+                            display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-file-earmark-arrow-up" style="color:#fff;font-size:1.4rem;"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0">Import Residents from Excel</h5>
+                    <small class="text-muted">
+                        Upload an .xlsx file. Required columns:
+                        <code>first_name, last_name, birth_date, gender, civil_status, contact_number, address</code>
+                        — Optional: <code>middle_name, purok, barangay</code>
+                    </small>
+                </div>
+            </div>
+            <form method="POST" action="{{ route('reports.import') }}" enctype="multipart/form-data"
+                  class="d-flex align-items-center gap-3 flex-wrap">
+                @csrf
+                <input type="file" name="import_file" accept=".xlsx,.xls"
+                       class="form-control form-control-sm @error('import_file') is-invalid @enderror"
+                       style="max-width:320px;" required>
+                @error('import_file')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-upload me-1"></i> Import
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div class="row g-4">
-        {{-- Resident Census Report --}}
+
+        {{-- ── Resident Census Report ── --}}
         <div class="col-md-4">
             <div class="card h-100" style="border-top:4px solid #667eea;">
                 <div class="card-body">
@@ -21,21 +55,21 @@
                             <small class="text-muted">Filter by date range, purok & gender</small>
                         </div>
                     </div>
-                    <form method="GET" action="{{ route('reports.residents') }}" class="mb-3" id="residentFilterForm">
+
+                    {{-- View Report form --}}
+                    <form method="GET" action="{{ route('reports.residents') }}" class="mb-3" id="resForm">
                         <div class="mb-2">
-                            <input type="date" name="date_from" id="res_date_from" class="form-control form-control-sm"
-                                   placeholder="Date From">
+                            <input type="date" name="date_from" id="r_df" class="form-control form-control-sm">
                         </div>
                         <div class="mb-2">
-                            <input type="date" name="date_to" id="res_date_to" class="form-control form-control-sm"
-                                   placeholder="Date To">
+                            <input type="date" name="date_to" id="r_dt" class="form-control form-control-sm">
                         </div>
                         <div class="mb-2">
-                            <input type="text" name="purok" id="res_purok" class="form-control form-control-sm"
-                                   placeholder="Filter by Purok (e.g. Purok 1)">
+                            <input type="text" name="purok" id="r_pu" class="form-control form-control-sm"
+                                   placeholder="Filter by Purok (e.g. Zone 1)">
                         </div>
                         <div class="mb-3">
-                            <select name="gender" id="res_gender" class="form-select form-select-sm">
+                            <select name="gender" id="r_ge" class="form-select form-select-sm">
                                 <option value="">All Genders</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
@@ -45,19 +79,24 @@
                             <i class="bi bi-eye"></i> View Report
                         </button>
                     </form>
+
+                    {{-- Export buttons --}}
                     <div class="d-flex gap-1">
-                        <button type="button" onclick="exportReport('residents','pdf')"
-                                class="btn btn-outline-danger btn-sm flex-fill">PDF</button>
-                        <button type="button" onclick="exportReport('residents','xlsx')"
-                                class="btn btn-outline-success btn-sm flex-fill">XLSX</button>
-                        <button type="button" onclick="exportReport('residents','csv')"
-                                class="btn btn-outline-primary btn-sm flex-fill">CSV</button>
+                        <button onclick="doExport('residents','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
+                            <i class="bi bi-file-pdf"></i> PDF
+                        </button>
+                        <button onclick="doExport('residents','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
+                            <i class="bi bi-file-excel"></i> XLSX
+                        </button>
+                        <button onclick="doExport('residents','csv')" class="btn btn-outline-primary btn-sm flex-fill">
+                            <i class="bi bi-filetype-csv"></i> CSV
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Blotter Report --}}
+        {{-- ── Blotter Incidents Report ── --}}
         <div class="col-md-4">
             <div class="card h-100" style="border-top:4px solid #f56565;">
                 <div class="card-body">
@@ -68,26 +107,29 @@
                         </div>
                         <div>
                             <h5 class="fw-bold mb-0">Blotter Incidents</h5>
-                            <small class="text-muted">Filter by date range & household</small>
+                            <small class="text-muted">Filter by date range & status</small>
                         </div>
                     </div>
-                    <form method="GET" action="{{ route('reports.blotters') }}" class="mb-3" id="blotterFilterForm">
+
+                    <form method="GET" action="{{ route('reports.blotters') }}" class="mb-3" id="bltForm">
                         <div class="mb-2">
-                            <input type="date" name="date_from" id="blt_date_from" class="form-control form-control-sm">
+                            <input type="date" name="date_from" id="b_df" class="form-control form-control-sm">
                         </div>
                         <div class="mb-2">
-                            <input type="date" name="date_to" id="blt_date_to" class="form-control form-control-sm">
+                            <input type="date" name="date_to" id="b_dt" class="form-control form-control-sm">
                         </div>
                         <div class="mb-2">
-                            <select name="household_id" id="blt_household" class="form-select form-select-sm">
+                            <select name="household_id" id="b_hh" class="form-select form-select-sm">
                                 <option value="">All Households</option>
                                 @foreach($households as $hh)
-                                    <option value="{{ $hh->id }}">{{ $hh->address }}{{ $hh->purok ? ' (Purok '.$hh->purok.')' : '' }}</option>
+                                    <option value="{{ $hh->id }}">
+                                        {{ $hh->address }}{{ $hh->purok ? ' ('.$hh->purok.')' : '' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="mb-3">
-                            <select name="status" id="blt_status" class="form-select form-select-sm">
+                            <select name="status" id="b_st" class="form-select form-select-sm">
                                 <option value="">All Status</option>
                                 <option value="pending_review">Pending Review</option>
                                 <option value="open">Open</option>
@@ -100,19 +142,23 @@
                             <i class="bi bi-eye"></i> View Report
                         </button>
                     </form>
+
                     <div class="d-flex gap-1">
-                        <button type="button" onclick="exportReport('blotters','pdf')"
-                                class="btn btn-outline-danger btn-sm flex-fill">PDF</button>
-                        <button type="button" onclick="exportReport('blotters','xlsx')"
-                                class="btn btn-outline-success btn-sm flex-fill">XLSX</button>
-                        <button type="button" onclick="exportReport('blotters','csv')"
-                                class="btn btn-outline-primary btn-sm flex-fill">CSV</button>
+                        <button onclick="doExport('blotters','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
+                            <i class="bi bi-file-pdf"></i> PDF
+                        </button>
+                        <button onclick="doExport('blotters','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
+                            <i class="bi bi-file-excel"></i> XLSX
+                        </button>
+                        <button onclick="doExport('blotters','csv')" class="btn btn-outline-primary btn-sm flex-fill">
+                            <i class="bi bi-filetype-csv"></i> CSV
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Clearance Report --}}
+        {{-- ── Clearance Issuances Report ── --}}
         <div class="col-md-4">
             <div class="card h-100" style="border-top:4px solid #48bb78;">
                 <div class="card-body">
@@ -123,26 +169,29 @@
                         </div>
                         <div>
                             <h5 class="fw-bold mb-0">Clearance Issuances</h5>
-                            <small class="text-muted">Filter by date range & household</small>
+                            <small class="text-muted">Filter by date range & status</small>
                         </div>
                     </div>
-                    <form method="GET" action="{{ route('reports.clearances') }}" class="mb-3" id="clearanceFilterForm">
+
+                    <form method="GET" action="{{ route('reports.clearances') }}" class="mb-3" id="clrForm">
                         <div class="mb-2">
-                            <input type="date" name="date_from" id="clr_date_from" class="form-control form-control-sm">
+                            <input type="date" name="date_from" id="c_df" class="form-control form-control-sm">
                         </div>
                         <div class="mb-2">
-                            <input type="date" name="date_to" id="clr_date_to" class="form-control form-control-sm">
+                            <input type="date" name="date_to" id="c_dt" class="form-control form-control-sm">
                         </div>
                         <div class="mb-2">
-                            <select name="household_id" id="clr_household" class="form-select form-select-sm">
+                            <select name="household_id" id="c_hh" class="form-select form-select-sm">
                                 <option value="">All Households</option>
                                 @foreach($households as $hh)
-                                    <option value="{{ $hh->id }}">{{ $hh->address }}{{ $hh->purok ? ' (Purok '.$hh->purok.')' : '' }}</option>
+                                    <option value="{{ $hh->id }}">
+                                        {{ $hh->address }}{{ $hh->purok ? ' ('.$hh->purok.')' : '' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="mb-3">
-                            <select name="status" id="clr_status" class="form-select form-select-sm">
+                            <select name="status" id="c_st" class="form-select form-select-sm">
                                 <option value="">All Status</option>
                                 <option value="pending">Pending</option>
                                 <option value="approved">Approved</option>
@@ -153,58 +202,61 @@
                             <i class="bi bi-eye"></i> View Report
                         </button>
                     </form>
+
                     <div class="d-flex gap-1">
-                        <button type="button" onclick="exportReport('clearances','pdf')"
-                                class="btn btn-outline-danger btn-sm flex-fill">PDF</button>
-                        <button type="button" onclick="exportReport('clearances','xlsx')"
-                                class="btn btn-outline-success btn-sm flex-fill">XLSX</button>
-                        <button type="button" onclick="exportReport('clearances','csv')"
-                                class="btn btn-outline-primary btn-sm flex-fill">CSV</button>
+                        <button onclick="doExport('clearances','pdf')" class="btn btn-outline-danger btn-sm flex-fill">
+                            <i class="bi bi-file-pdf"></i> PDF
+                        </button>
+                        <button onclick="doExport('clearances','xlsx')" class="btn btn-outline-success btn-sm flex-fill">
+                            <i class="bi bi-file-excel"></i> XLSX
+                        </button>
+                        <button onclick="doExport('clearances','csv')" class="btn btn-outline-primary btn-sm flex-fill">
+                            <i class="bi bi-filetype-csv"></i> CSV
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </x-layout>
 
 @push('scripts')
 <script>
-function exportReport(type, format) {
-    const base = "{{ route('reports.export') }}";
-    const params = new URLSearchParams({ type, format });
+function doExport(type, format) {
+    const base = '{{ route("reports.export") }}';
+    const p    = new URLSearchParams({ type, format });
 
     if (type === 'residents') {
-        const df = document.getElementById('res_date_from')?.value;
-        const dt = document.getElementById('res_date_to')?.value;
-        const pu = document.getElementById('res_purok')?.value;
-        const ge = document.getElementById('res_gender')?.value;
-        const se = document.getElementById('res_search')?.value;
-        if (df) params.set('date_from', df);
-        if (dt) params.set('date_to', dt);
-        if (pu) params.set('purok', pu);
-        if (ge) params.set('gender', ge);
-        if (se) params.set('search', se);
+        const df = document.getElementById('r_df').value;
+        const dt = document.getElementById('r_dt').value;
+        const pu = document.getElementById('r_pu').value;
+        const ge = document.getElementById('r_ge').value;
+        if (df) p.set('date_from', df);
+        if (dt) p.set('date_to',   dt);
+        if (pu) p.set('purok',     pu);
+        if (ge) p.set('gender',    ge);
     } else if (type === 'blotters') {
-        const df = document.getElementById('blt_date_from')?.value;
-        const dt = document.getElementById('blt_date_to')?.value;
-        const hh = document.getElementById('blt_household')?.value;
-        const st = document.getElementById('blt_status')?.value;
-        if (df) params.set('date_from', df);
-        if (dt) params.set('date_to', dt);
-        if (hh) params.set('household_id', hh);
-        if (st) params.set('status', st);
+        const df = document.getElementById('b_df').value;
+        const dt = document.getElementById('b_dt').value;
+        const hh = document.getElementById('b_hh').value;
+        const st = document.getElementById('b_st').value;
+        if (df) p.set('date_from',    df);
+        if (dt) p.set('date_to',      dt);
+        if (hh) p.set('household_id', hh);
+        if (st) p.set('status',       st);
     } else if (type === 'clearances') {
-        const df = document.getElementById('clr_date_from')?.value;
-        const dt = document.getElementById('clr_date_to')?.value;
-        const hh = document.getElementById('clr_household')?.value;
-        const st = document.getElementById('clr_status')?.value;
-        if (df) params.set('date_from', df);
-        if (dt) params.set('date_to', dt);
-        if (hh) params.set('household_id', hh);
-        if (st) params.set('status', st);
+        const df = document.getElementById('c_df').value;
+        const dt = document.getElementById('c_dt').value;
+        const hh = document.getElementById('c_hh').value;
+        const st = document.getElementById('c_st').value;
+        if (df) p.set('date_from',    df);
+        if (dt) p.set('date_to',      dt);
+        if (hh) p.set('household_id', hh);
+        if (st) p.set('status',       st);
     }
 
-    window.location.href = base + '?' + params.toString();
+    window.location.href = base + '?' + p.toString();
 }
 </script>
 @endpush

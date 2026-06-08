@@ -170,6 +170,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/blotters', [ReportController::class, 'blotters'])->name('blotters');
             Route::get('/clearances', [ReportController::class, 'clearances'])->name('clearances');
             Route::get('/export', [ReportController::class, 'export'])->name('export');
+            Route::post('/import', [ReportController::class, 'import'])->name('import');
         });
     });
 });
