@@ -24,11 +24,13 @@
         <form method="GET" action="{{ route('reports.residents') }}" class="row g-2 align-items-end">
             <div class="col-md-2">
                 <label class="form-label fw-semibold mb-1" style="font-size:12px;">Date From</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm">
+                <input type="date" name="date_from" id="dateFrom" value="{{ $dateFrom }}" class="form-control form-control-sm"
+                       onchange="validateDateRange()">
             </div>
             <div class="col-md-2">
                 <label class="form-label fw-semibold mb-1" style="font-size:12px;">Date To</label>
-                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm">
+                <input type="date" name="date_to" id="dateTo" value="{{ $dateTo }}" class="form-control form-control-sm"
+                       onchange="validateDateRange()">
             </div>
             <div class="col-md-2">
                 <label class="form-label fw-semibold mb-1" style="font-size:12px;">Purok</label>
@@ -49,12 +51,17 @@
                        placeholder="Name or contact...">
             </div>
             <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary btn-sm flex-fill">
+                <button type="submit" id="filterBtn" class="btn btn-primary btn-sm flex-fill">
                     <i class="bi bi-funnel"></i> Filter
                 </button>
                 <a href="{{ route('reports.residents') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
             </div>
         </form>
+        {{-- Date range warning --}}
+        <div id="dateWarning" class="alert alert-warning py-2 mt-2 mb-0" style="display:none;font-size:13px;">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <strong>Invalid date range:</strong> "Date To" must be equal to or after "Date From".
+        </div>
     </x-card>
 
     {{-- Active filter banner — shows date range prominently (Req 12) --}}
@@ -141,3 +148,26 @@
         </div>
     </x-card>
 </x-layout>
+
+<script>
+function validateDateRange() {
+    const from    = document.getElementById('dateFrom').value;
+    const to      = document.getElementById('dateTo').value;
+    const warning = document.getElementById('dateWarning');
+    const btn     = document.getElementById('filterBtn');
+
+    if (from && to && from > to) {
+        warning.style.display = 'flex';
+        btn.disabled = true;
+        // Auto-fix: set date_to to match date_from
+        document.getElementById('dateTo').style.borderColor = '#ef4444';
+    } else {
+        warning.style.display = 'none';
+        btn.disabled = false;
+        document.getElementById('dateTo').style.borderColor = '';
+    }
+}
+
+// Run on page load to catch server-returned invalid ranges
+document.addEventListener('DOMContentLoaded', validateDateRange);
+</script>
